@@ -4,5 +4,5 @@ import com.cpt.payments.entity.TransactionEntity;
 
 public interface TransactionDao {
 	
-	public boolean insertPaymentIntoDB(TransactionEntity transactionEntity);
+	public boolean createPayment(TransactionEntity transactionEntity);
 }
