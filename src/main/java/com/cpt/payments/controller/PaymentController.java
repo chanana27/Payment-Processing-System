@@ -1,13 +1,17 @@
 package com.cpt.payments.controller;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cpt.payments.constants.EndPoints;
+import com.cpt.payments.dto.PaymentResponseDTO;
 import com.cpt.payments.dto.TransactionDTO;
+import com.cpt.payments.pojo.PaymentResponse;
 import com.cpt.payments.pojo.Transaction;
 import com.cpt.payments.service.interfaces.PaymentStatusService;
 
@@ -27,15 +31,16 @@ public class PaymentController {
 	}
 
 	@PostMapping("/create")
-		public String createPayment(@RequestBody Transaction transaction) {
+		public ResponseEntity<PaymentResponse> createPayment(@RequestBody Transaction transaction) {
 			log.info("In controller received transaction object as {}", transaction);
 			
 			TransactionDTO transactionDTO = modelMapper.map(transaction, TransactionDTO.class);
 			log.info("Converted Transaction to TransactionDTO as {}", transactionDTO);
 			
-			String rs = paymentStatusService.insertPayment(transactionDTO);
+			PaymentResponseDTO responseDTO = paymentStatusService.insertPayment(transactionDTO);
+			log.info("Received responseDTO from service as {}", responseDTO);
+			PaymentResponse response = modelMapper.map(responseDTO, PaymentResponse.class);
 			
-			return rs;
-		}
-	
+			return new ResponseEntity<>(response, HttpStatus.CREATED);
+		}	
 }

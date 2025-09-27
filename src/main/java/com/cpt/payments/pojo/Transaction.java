@@ -12,14 +12,14 @@ public class Transaction {
 	private int id;
     private int userId;
 
-    private int paymentMethodId;
-    private int providerId;
-    private int paymentTypeId;
+    private String paymentMethod;
+    private String provider;
+    private String paymentType;
 
     private Double amount;
     private String currency;
 
-    private int txnStatusId;
+    private String txnStatus;
 
     private String merchantTransactionReference;
     private String txnReference;

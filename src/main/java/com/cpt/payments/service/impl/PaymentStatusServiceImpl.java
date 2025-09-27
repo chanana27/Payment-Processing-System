@@ -1,9 +1,13 @@
 package com.cpt.payments.service.impl;
 
-import org.modelmapper.ModelMapper;
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 
+import com.cpt.payments.constants.TransactionStatusEnum;
+import com.cpt.payments.dto.PaymentResponseDTO;
 import com.cpt.payments.dto.TransactionDTO;
+import com.cpt.payments.pojo.PaymentResponse;
 import com.cpt.payments.service.factory.TransactionStatusFactory;
 import com.cpt.payments.service.interfaces.PaymentStatusService;
 import com.cpt.payments.service.interfaces.TransactionStatusHandler;
@@ -14,22 +18,33 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class PaymentStatusServiceImpl implements PaymentStatusService {
 
-	private ModelMapper modelMapper;
 	private TransactionStatusFactory statusFactory;
 	
-	public PaymentStatusServiceImpl(ModelMapper modelMapper, TransactionStatusFactory statusFactory) {
-		this.modelMapper = modelMapper;
+	public PaymentStatusServiceImpl(TransactionStatusFactory statusFactory) {
 		this.statusFactory = statusFactory;
 	}
 	
 	@Override
-	public String insertPayment(TransactionDTO transactionDTO) {
+	public PaymentResponseDTO insertPayment(TransactionDTO transactionDTO) {
 		log.info("Received TransactionDTO at service {}", transactionDTO);
 		
-		TransactionStatusHandler statusHandler = statusFactory.getStatusHandler(transactionDTO.getTxnStatusId());
-		boolean result = statusHandler.processStatus(transactionDTO);
+		transactionDTO.setTxnReference(UUID.randomUUID().toString());
 		
-		return "Payment created into DB "+ result;
+		TransactionStatusHandler statusHandler = statusFactory.getStatusHandler(
+													TransactionStatusEnum.getEnumByName(
+															transactionDTO.getTxnStatus()
+															).getId());
+		
+		PaymentResponseDTO paymentResponse = new PaymentResponseDTO();
+		paymentResponse.setTxnReference(transactionDTO.getTxnReference());
+		
+		boolean result = statusHandler.processStatus(transactionDTO);
+		if(result == true)
+			paymentResponse.setTxnStatus("CREATED");
+		else
+			paymentResponse.setTxnStatus("FAILED");
+			
+		return paymentResponse;
 	}
 
 }
