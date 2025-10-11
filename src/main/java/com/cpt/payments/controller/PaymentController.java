@@ -3,16 +3,20 @@ package com.cpt.payments.controller;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.cpt.payments.constants.EndPoints;
+import com.cpt.payments.dto.InitiateRequestDTO;
 import com.cpt.payments.dto.PaymentResponseDTO;
 import com.cpt.payments.dto.TransactionDTO;
+import com.cpt.payments.pojo.InitiateRequest;
 import com.cpt.payments.pojo.PaymentResponse;
 import com.cpt.payments.pojo.Transaction;
+import com.cpt.payments.service.interfaces.PaymentService;
 import com.cpt.payments.service.interfaces.PaymentStatusService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +28,13 @@ public class PaymentController {
 	
 	private ModelMapper modelMapper;
 	private PaymentStatusService paymentStatusService;
+	private PaymentService paymentService;
 	
-	public PaymentController(ModelMapper modelMapper, PaymentStatusService paymentStatusService) {
+	public PaymentController(ModelMapper modelMapper, PaymentStatusService paymentStatusService,
+			PaymentService paymentService) {
 		this.modelMapper = modelMapper;
 		this.paymentStatusService = paymentStatusService;
+		this.paymentService = paymentService;
 	}
 
 	@PostMapping("/create")
@@ -42,5 +49,21 @@ public class PaymentController {
 			PaymentResponse response = modelMapper.map(responseDTO, PaymentResponse.class);
 			
 			return new ResponseEntity<>(response, HttpStatus.CREATED);
-		}	
+		}
+	
+	@PostMapping("/{txnReference}/initiate")
+	public ResponseEntity<PaymentResponse> initiatePayment(@PathVariable String txnReference,
+			@RequestBody InitiateRequest initiateRequest) {
+		
+		log.info("In controller received Initiate Request object as {}", initiateRequest);
+		
+		InitiateRequestDTO initiateRequestDTO = modelMapper.map(initiateRequest, InitiateRequestDTO.class);
+		log.info("Converted Transaction to TransactionDTO as {}", initiateRequestDTO);
+		
+		PaymentResponseDTO responseDTO = paymentService.initiatePayment(initiateRequestDTO, txnReference);
+		PaymentResponse response = modelMapper.map(responseDTO, PaymentResponse.class);
+		
+		log.info("Payment Initiated successfully {}", response);
+		return new ResponseEntity<>(response, HttpStatus.OK); 
+	}
 }

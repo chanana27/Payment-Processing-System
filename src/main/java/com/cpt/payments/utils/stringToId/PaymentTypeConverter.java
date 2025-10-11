@@ -1,4 +1,4 @@
-package com.cpt.payments.utils;
+package com.cpt.payments.utils.stringToId;
 
 import org.modelmapper.Converter;
 import org.modelmapper.spi.MappingContext;

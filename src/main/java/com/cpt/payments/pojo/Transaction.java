@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Transaction {
 	
-	private int id;
     private int userId;
 
     private String paymentMethod;
@@ -22,6 +21,5 @@ public class Transaction {
     private String txnStatus;
 
     private String merchantTransactionReference;
-    private String txnReference;
 
 }
