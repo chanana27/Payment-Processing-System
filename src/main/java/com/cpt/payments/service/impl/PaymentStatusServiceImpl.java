@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.cpt.payments.constants.TransactionStatusEnum;
 import com.cpt.payments.dao.interfaces.TransactionDao;
-import com.cpt.payments.dto.PaymentResponseDTO;
+import com.cpt.payments.dto.TransactionResponseDTO;
 import com.cpt.payments.dto.TransactionDTO;
 import com.cpt.payments.service.factory.TransactionStatusFactory;
 import com.cpt.payments.service.interfaces.PaymentStatusService;
@@ -20,19 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 public class PaymentStatusServiceImpl implements PaymentStatusService {
 
 	private TransactionStatusFactory statusFactory;
-	private TransactionDao transactionDao;
-	private ModelMapper modelMapper;
 
-	public PaymentStatusServiceImpl(TransactionStatusFactory statusFactory,
-									TransactionDao transactionDao,
-									ModelMapper modelMapper) {
+	public PaymentStatusServiceImpl(TransactionStatusFactory statusFactory) {
 		this.statusFactory = statusFactory;
-		this.transactionDao = transactionDao;
-		this.modelMapper = modelMapper;
 	}
 	
 	@Override
-	public PaymentResponseDTO insertPayment(TransactionDTO transactionDTO) {
+	public TransactionResponseDTO insertPayment(TransactionDTO transactionDTO) {
 		log.info("Received TransactionDTO at service {}", transactionDTO);
 		
 		transactionDTO.setTxnReference(UUID.randomUUID().toString());
@@ -40,15 +34,17 @@ public class PaymentStatusServiceImpl implements PaymentStatusService {
 		TransactionStatusHandler statusHandler = statusFactory.getStatusHandler(
 													TransactionStatusEnum.getEnumByName(
 															transactionDTO.getTxnStatus()));
-		
-		PaymentResponseDTO paymentResponse = new PaymentResponseDTO();
-		paymentResponse.setTxnReference(transactionDTO.getTxnReference());
-		
+
 		boolean result = statusHandler.processStatus(transactionDTO);
-		if(result == true)
-			paymentResponse.setTxnStatus("CREATED");
-		else
-			paymentResponse.setTxnStatus("FAILED"); 
+
+        if(!result){
+            log.info("Transaction not saved into DB| Transaction:{}", transactionDTO);
+        }
+
+		TransactionResponseDTO paymentResponse = new TransactionResponseDTO();
+		paymentResponse.setTxnReference(transactionDTO.getTxnReference());
+		paymentResponse.setTxnStatus(transactionDTO.getTxnStatus());
+        paymentResponse.setRedirectUrl("https://redirect.dummy.com");
 			
 		return paymentResponse;
 	}

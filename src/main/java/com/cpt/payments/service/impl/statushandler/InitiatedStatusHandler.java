@@ -1,19 +1,13 @@
 package com.cpt.payments.service.impl.statushandler;
 
+import com.cpt.payments.dto.TransactionLog;
 import org.modelmapper.ModelMapper;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import com.cpt.payments.constants.ErrorCodeEnum;
 import com.cpt.payments.constants.TransactionStatusEnum;
 import com.cpt.payments.dao.interfaces.TransactionDao;
-import com.cpt.payments.dao.interfaces.TransactionLog;
+import com.cpt.payments.dao.interfaces.TransactionLogDao;
 import com.cpt.payments.dto.TransactionDTO;
-import com.cpt.payments.entity.TransactionEntity;
-import com.cpt.payments.exception.PaymentException;
 import com.cpt.payments.service.interfaces.TransactionStatusHandler;
 
 import lombok.extern.slf4j.Slf4j;
@@ -24,26 +18,39 @@ public class InitiatedStatusHandler implements TransactionStatusHandler {
 	
 	private TransactionDao transactionDao;
 	private ModelMapper modelMapper;
-	private TransactionLog transactionLog;
+	private TransactionLogDao transactionLogDao;
 	
 	public InitiatedStatusHandler(TransactionDao transactionDao,
-								ModelMapper modelMapper, TransactionLog transactionLog) {
+								ModelMapper modelMapper, TransactionLogDao transactionLog) {
 		this.transactionDao = transactionDao;
 		this.modelMapper = modelMapper;
-		this.transactionLog = transactionLog;
+		this.transactionLogDao = transactionLog;
 	}
 
 	@Override
 	public boolean processStatus(TransactionDTO transactionDTO) {
 		log.info("Processing status for Initiated|| transaction:{}", transactionDTO);
-		
+
+        TransactionDTO txnBeforeUpdate = transactionDao.findByTxnReference(transactionDTO.getTxnReference());
+
+        if(!canUpdate(txnBeforeUpdate.getTxnStatus(), transactionDTO.getTxnStatus())){
+            log.error("Cannot Update transaction fromStatus:{}|toStatus:{} for txnReference:{}",
+                    txnBeforeUpdate.getTxnStatus(),
+                    transactionDTO.getTxnStatus(),
+                    transactionDTO.getTxnReference());
+            return false;
+        }
+
 		boolean isTxnSaved = transactionDao.updateTransaction(transactionDTO);
 		
 		//TODO: Logic for update in transaction log
-		
-		transactionLog.logEntry(transactionDTO.getId(), TransactionStatusEnum.CREATED.name(),
-				TransactionStatusEnum.getEnumByName(transactionDTO.getTxnStatus()).name());
-		
+
+        TransactionLog transactionLog = TransactionLog.builder().transactionId(transactionDTO.getId())
+                .txnFromStatus(txnBeforeUpdate.getTxnStatus())
+                .txnToStatus(transactionDTO.getTxnStatus())
+                .build();
+
+        transactionLogDao.createTransactionLog(transactionLog);
 		return isTxnSaved;
 	}
 

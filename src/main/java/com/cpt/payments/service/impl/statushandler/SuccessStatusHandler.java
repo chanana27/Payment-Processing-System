@@ -1,5 +1,7 @@
 package com.cpt.payments.service.impl.statushandler;
 
+import com.cpt.payments.dao.interfaces.TransactionLogDao;
+import com.cpt.payments.dto.TransactionLog;
 import org.modelmapper.ModelMapper;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
@@ -19,10 +21,40 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class SuccessStatusHandler implements TransactionStatusHandler {
-	
-	@Override
+
+    private TransactionLogDao transactionLogDao;
+    private TransactionDao transactionDao;
+
+    public SuccessStatusHandler(TransactionDao transactionDao, TransactionLogDao transactionLogDao) {
+        this.transactionDao = transactionDao;
+        this.transactionLogDao = transactionLogDao;
+    }
+
+    @Override
 	public boolean processStatus(TransactionDTO transactionDTO) {
-		return true;
+        log.info("Processing status for Success || transaction:{}", transactionDTO);
+
+        TransactionDTO txnBeforeUpdate = transactionDao.findByTxnReference(transactionDTO.getTxnReference());
+
+        if(!canUpdate(txnBeforeUpdate.getTxnStatus(), transactionDTO.getTxnStatus())){
+            log.error("Cannot Update transaction fromStatus:{}|toStatus:{} for txnReference:{}",
+                    txnBeforeUpdate.getTxnStatus(),
+                    transactionDTO.getTxnStatus(),
+                    transactionDTO.getTxnReference());
+            return false;
+        }
+
+        boolean isTxnSaved = transactionDao.updateTransaction(transactionDTO);
+
+        log.info("Transaction updated successfully||isTxnUpdated:{}", isTxnSaved);
+
+        TransactionLog transactionLog = TransactionLog.builder().transactionId(transactionDTO.getId())
+                .txnFromStatus(txnBeforeUpdate.getTxnStatus())
+                .txnToStatus(transactionDTO.getTxnStatus())
+                .build();
+
+        transactionLogDao.createTransactionLog(transactionLog);
+        return isTxnSaved;
 		
 	}
 

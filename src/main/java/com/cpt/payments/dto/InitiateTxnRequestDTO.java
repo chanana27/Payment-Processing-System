@@ -3,7 +3,7 @@ package com.cpt.payments.dto;
 import lombok.Data;
 
 @Data
-public class InitiateRequestDTO {
+public class InitiateTxnRequestDTO {
 	private String firstname;
 	private String lastname;
 	private String email;

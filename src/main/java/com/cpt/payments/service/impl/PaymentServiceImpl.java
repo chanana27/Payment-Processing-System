@@ -1,16 +1,13 @@
 package com.cpt.payments.service.impl;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import com.cpt.payments.constants.ProviderEnum;
 import com.cpt.payments.constants.TransactionStatusEnum;
 import com.cpt.payments.dao.interfaces.TransactionDao;
-import com.cpt.payments.dao.interfaces.TransactionLog;
-import com.cpt.payments.dto.InitiateRequestDTO;
-import com.cpt.payments.dto.PaymentResponseDTO;
+import com.cpt.payments.dto.InitiateTxnRequestDTO;
+import com.cpt.payments.dto.TransactionResponseDTO;
 import com.cpt.payments.dto.TransactionDTO;
-import com.cpt.payments.entity.TransactionEntity;
 import com.cpt.payments.service.factory.TransactionStatusFactory;
 import com.cpt.payments.service.interfaces.PaymentService;
 import com.cpt.payments.service.interfaces.TransactionStatusHandler;
@@ -31,8 +28,8 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	@Override
-	public PaymentResponseDTO initiatePayment(InitiateRequestDTO initiateRequestDTO, String txnReference) {
-		log.info("Received TransactionDTO to initiate payment {}", initiateRequestDTO);
+	public TransactionResponseDTO initiatePayment(InitiateTxnRequestDTO initiateRequestDTO, String txnReference) {
+		log.info("Initiating payment for txnReference:{}", txnReference);
 		
 		TransactionDTO txnDTO= transactionDao.findByTxnReference(txnReference);
 		
@@ -47,40 +44,13 @@ public class PaymentServiceImpl implements PaymentService {
 			log.info("Txn not updated into DB|| transaction:{}", txnDTO);
 			//TODO: THROW EXCEPTION
 		}
-		
-		
-		
-		log.info("Calling third party");
-		// Identify third party provider.
-		String provider = txnDTO.getProvider();
-		if(provider.equals(ProviderEnum.TRUSTLY.name())) {
-			// call trustly api
-			// success response got provider reference and redirectURL from trustly
-			String providerReference = "Dummy reference";
-			
-			txnDTO.setTxnStatus(TransactionStatusEnum.PENDING.name());
-			txnDTO.setProviderReference(providerReference);
-			
-			statusHandler = statusFactory.getStatusHandler(
-					TransactionStatusEnum.getEnumByName(txnDTO.getTxnStatus()));
-			
-			isUpdate = statusHandler.processStatus(txnDTO);
-			
-			if(!isUpdate) {
-				log.info("Cannot update transaction as pending!");
-			}
-			
-			
-			
-			// failed response from trustly
-			
-			
-		}
-		
-		
-		PaymentResponseDTO response = new PaymentResponseDTO();
+
+        // transaction.getProvider()
+
+		TransactionResponseDTO response = new TransactionResponseDTO();
 		response.setTxnReference(txnDTO.getTxnReference());		
 		response.setTxnStatus(txnDTO.getTxnStatus());
+        response.setRedirectUrl("https://dummy.test.com/redirect");
 		
 		return response;
 	}

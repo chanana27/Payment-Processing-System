@@ -10,6 +10,8 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import com.cpt.payments.constants.ErrorCodeEnum;
@@ -34,7 +36,7 @@ public class TransactionDaoImpl implements TransactionDao {
 	}
 
 	@Override
-	public boolean createPayment(TransactionEntity transactionEntity) {
+	public Long createPayment(TransactionEntity transactionEntity) {
 
 		String sql = "INSERT INTO payments.`Transaction` (" +
 				"userId, paymentMethodId, providerId, paymentTypeId, " +
@@ -48,10 +50,19 @@ public class TransactionDaoImpl implements TransactionDao {
 				":providerCode, :providerMessage, :providerReference, " +
 				":retryCount)";
 
+        KeyHolder keyHolder = new GeneratedKeyHolder();
 		int rowsUpdated;
 		try {
-			rowsUpdated = jdbcTemplate.update(sql, new BeanPropertySqlParameterSource(transactionEntity));
-			log.info("Insert into DB | rowsUpdated {}", rowsUpdated);
+			rowsUpdated = jdbcTemplate.update(
+                    sql,
+                    new BeanPropertySqlParameterSource(transactionEntity),
+                    keyHolder,
+                    new String[] {"transactionId"}
+            );
+
+            Long generatedTxnId = keyHolder.getKey() != null ? keyHolder.getKey().longValue() : null;
+			log.info("Insert into DB | rowsUpdated: {} | transactionId: {}", rowsUpdated, generatedTxnId);
+            return generatedTxnId;
 
 		}catch(DuplicateKeyException e) {
 
@@ -68,8 +79,6 @@ public class TransactionDaoImpl implements TransactionDao {
 					ErrorCodeEnum.Payment_Not_Saved.getErrorMessage(),
 					HttpStatus.INTERNAL_SERVER_ERROR);
 		}
-
-		return rowsUpdated == 1;
 
 	}
 
@@ -120,7 +129,8 @@ public class TransactionDaoImpl implements TransactionDao {
 //			TODO: throw exception.
 		}
 		
-		log.info("Update Transaction in DB as initiated| rowsUpdated| {}", rowsUpdated);
+		log.info("Updated txnStatusId for txnReference:{} to txnStatusId:{} | Rows affected:{}",
+                txnReference, txnStatusId, rowsUpdated);
 		return true;
 	}
 }
