@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -91,12 +92,21 @@ public class TransactionDaoImpl implements TransactionDao {
 		Map<String, Object> params = new HashMap<>();
 		params.put("txnReference", txnReference);
 
+        TransactionEntity entity;
 		// TODO: handle case when txnEntity is null.
-		TransactionEntity entity = jdbcTemplate.queryForObject(
-								sql,
-								params,
-								new BeanPropertyRowMapper<>(TransactionEntity.class));
-		
+        try {
+            entity = jdbcTemplate.queryForObject(
+                    sql,
+                    params,
+                    new BeanPropertyRowMapper<>(TransactionEntity.class));
+        }
+        catch(DataAccessException e) {
+                log.info("Could not find a transaction with txnReference:{}", txnReference);
+                throw new PaymentException(
+                        ErrorCodeEnum.Initiate_Transaction_Failed.getErrorCode(),
+                        ErrorCodeEnum.Initiate_Transaction_Failed.getErrorMessage(),
+                        HttpStatus.BAD_REQUEST);
+        }
 		TransactionDTO txnDTO = modelMapper.map(entity, TransactionDTO.class);
 		
 		log.info("Transaction fetched from DB txnReference:{}|txnDTO:{}", txnReference, txnDTO);
@@ -121,12 +131,17 @@ public class TransactionDaoImpl implements TransactionDao {
 		parameters.addValue("txnStatusId", txnStatusId);
 		parameters.addValue("txnReference", txnReference);
 		parameters.addValue("providerReference", providerReference);
-		
+
 		int rowsUpdated = jdbcTemplate.update(sql, parameters);
-		
+
 		if(rowsUpdated != 1) {
 			log.info("Could not initiate transaction in DB!");
 //			TODO: throw exception.
+            throw new PaymentException(
+                    ErrorCodeEnum.Cannot_Initiate.getErrorCode(),
+                    ErrorCodeEnum.Cannot_Initiate.getErrorMessage(),
+                    HttpStatus.INTERNAL_SERVER_ERROR
+            );
 		}
 		
 		log.info("Updated txnStatusId for txnReference:{} to txnStatusId:{} | Rows affected:{}",

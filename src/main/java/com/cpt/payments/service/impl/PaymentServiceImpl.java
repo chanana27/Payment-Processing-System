@@ -1,5 +1,8 @@
 package com.cpt.payments.service.impl;
 
+import com.cpt.payments.constants.ErrorCodeEnum;
+import com.cpt.payments.exception.PaymentException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.cpt.payments.constants.ProviderEnum;
@@ -42,7 +45,10 @@ public class PaymentServiceImpl implements PaymentService {
 		
 		if(!isUpdate) {
 			log.info("Txn not updated into DB|| transaction:{}", txnDTO);
-			//TODO: THROW EXCEPTION
+			throw new PaymentException(
+                    ErrorCodeEnum.Transaction_Already_Initiated.getErrorCode(),
+                    ErrorCodeEnum.Transaction_Already_Initiated.getErrorMessage(),
+                    HttpStatus.BAD_REQUEST);
 		}
 
         // transaction.getProvider()

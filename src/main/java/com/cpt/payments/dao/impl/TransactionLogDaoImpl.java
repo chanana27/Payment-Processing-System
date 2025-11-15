@@ -16,13 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 public class TransactionLogDaoImpl implements TransactionLogDao {
 
 	private NamedParameterJdbcTemplate jdbcTemplate;
-	private ModelMapper modelMapper;
-	
-	
-	public TransactionLogDaoImpl(NamedParameterJdbcTemplate jdbcTemplate, ModelMapper modelMapper) {
+
+	public TransactionLogDaoImpl(NamedParameterJdbcTemplate jdbcTemplate) {
 		super();
 		this.jdbcTemplate = jdbcTemplate;
-		this.modelMapper = modelMapper;
 	}
 
     @Override

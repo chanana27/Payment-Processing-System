@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Transaction {
 	
-    private int userId;
+    private String userId;
 
     private String paymentMethod;
     private String provider;

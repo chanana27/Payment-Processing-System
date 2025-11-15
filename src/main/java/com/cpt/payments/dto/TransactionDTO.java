@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class TransactionDTO {
 	
 	private int id;
-    private int userId;
+    private String userId;
 
     private String paymentMethod;
     private String provider;

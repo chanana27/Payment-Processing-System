@@ -16,13 +16,12 @@ import lombok.extern.slf4j.Slf4j;
 public class PaymentExceptionHandler {
 
 	@ExceptionHandler(PaymentException.class)
-	public ResponseEntity<PaymentError> handleCustomeUncheckedException(PaymentException ex) {
+	public ResponseEntity<PaymentError> handleCustomUncheckedException(PaymentException ex) {
         
-	 	log.info("Returning from PaymentExceptionHandler lopo {}", ex);
+	 	log.info("Returning from PaymentExceptionHandler {}", ex);
+
 	 	PaymentError paymentError = new PaymentError(ex.getErrorCode(), ex.getErrorMessage());
-	 	
 	 	return new ResponseEntity<>(paymentError, ex.getHttpStatus());
-	 
     }
 	
 	@ExceptionHandler(Exception.class)

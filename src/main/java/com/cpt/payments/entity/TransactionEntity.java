@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class TransactionEntity {
 	private int id;
-    private int userId;
+    private String userId;
 
     private int paymentMethodId;
     private int providerId;

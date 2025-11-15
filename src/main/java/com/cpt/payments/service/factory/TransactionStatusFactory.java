@@ -46,16 +46,5 @@ public class TransactionStatusFactory {
 				log.info("No handler found for status {}", status);
 				return null;
 		}
-		
-		
-		
-//		if(id == 1) {
-//			return applicationContext.getBean(
-//					CreatedStatusHandler.class);
-//		}
-//		log.info("No handler found for this status id {}", id);
-//		return null;
-		
-			
 	}
 }

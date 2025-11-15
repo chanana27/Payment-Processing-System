@@ -14,6 +14,7 @@ public interface TransactionStatusHandler {
         if(fromStatus.equals(toStatus))
             return false;
 
+        // cannot update status to SUCCESS OR FAILED
         return !toStatus.equals(TransactionStatusEnum.SUCCESS.name()) &&
                 !toStatus.equals(TransactionStatusEnum.FAILED.name());
     }

@@ -7,7 +7,6 @@ import lombok.Getter;
 @Getter
 public class PaymentException extends RuntimeException {
 	
-	
 	private static final long serialVersionUID = -998347914869283755L;
 	private final String errorCode;
 	private final String errorMessage;

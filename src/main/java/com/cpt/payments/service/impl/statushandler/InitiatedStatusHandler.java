@@ -42,8 +42,6 @@ public class InitiatedStatusHandler implements TransactionStatusHandler {
         }
 
 		boolean isTxnSaved = transactionDao.updateTransaction(transactionDTO);
-		
-		//TODO: Logic for update in transaction log
 
         TransactionLog transactionLog = TransactionLog.builder().transactionId(transactionDTO.getId())
                 .txnFromStatus(txnBeforeUpdate.getTxnStatus())

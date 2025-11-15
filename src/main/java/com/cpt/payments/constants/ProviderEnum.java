@@ -4,7 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum ProviderEnum {
-	TRUSTLY(1, "TRUSTLY");
+	TRUSTLY(1, "TRUSTLY"),
+    PAYPAL(2, "PAYPAL");
 
     private final int id;
     private final String name;

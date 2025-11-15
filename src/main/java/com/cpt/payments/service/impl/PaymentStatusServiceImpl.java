@@ -2,7 +2,10 @@ package com.cpt.payments.service.impl;
 
 import java.util.UUID;
 
+import com.cpt.payments.constants.ErrorCodeEnum;
+import com.cpt.payments.exception.PaymentException;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.cpt.payments.constants.TransactionStatusEnum;
@@ -28,7 +31,8 @@ public class PaymentStatusServiceImpl implements PaymentStatusService {
 	@Override
 	public TransactionResponseDTO insertPayment(TransactionDTO transactionDTO) {
 		log.info("Received TransactionDTO at service {}", transactionDTO);
-		
+
+        // Providing a unique transaction reference for every transaction rq coming from e-commerce.
 		transactionDTO.setTxnReference(UUID.randomUUID().toString());
 		
 		TransactionStatusHandler statusHandler = statusFactory.getStatusHandler(
